@@ -479,7 +479,7 @@ function Home() {
         e.preventDefault();
         const url = isSignInVisible ? '/api/login' : '/api/register';
         try {
-            const res = await axios.post(`http://localhost:5000${url}`, authData);
+            const res = await axios.post(`https://star-nova-5f8m.vercel.app/${url}`, authData);
             setToken(res.data.token);
             setUser(res.data.user);
             localStorage.setItem('token', res.data.token);
