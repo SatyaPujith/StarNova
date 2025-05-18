@@ -5,6 +5,7 @@ import './App.css';
 
 // Haversine formula to calculate distance between two coordinates (in kilometers)
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    
     if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
