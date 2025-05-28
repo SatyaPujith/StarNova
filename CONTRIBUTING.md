@@ -15,34 +15,34 @@ We welcome contributions from developers, designers, testers, document writers, 
 
 ## How to Contribute
 
-1. Fork and Clone the Repo
+### 1.Fork and Clone the Repo
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/starnova.git
 cd starnova
-
-2. Create a New Branch
-bash
+```
+### 2. Create a New Branch
+```bash
 Copy
 Edit
 git checkout -b your-feature-name
-
-3. Make Your Changes
+```
+### 3. Make Your Changes
 Work on your feature, bug fix, or documentation update.
 
-4. Commit Your Changes
-bash
+### 4. Commit Your Changes
+```bash
 Copy
 Edit
 git commit -m "Add: your meaningful message"
-
-5. Push to GitHub
-bash
+```
+### 5. Push to GitHub
+```bash
 Copy
 Edit
 git push origin your-feature-name
-
-6. Open a Pull Request (PR)
+```
+### 6. Open a Pull Request (PR)
 Go to your forked repo on GitHub and click New Pull Request.
 Describe your change clearly and reference any related issue (e.g., Closes #7).
 
