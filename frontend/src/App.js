@@ -480,7 +480,7 @@ function Home() {
         e.preventDefault();
         const url = isSignInVisible ? '/api/login' : '/api/register';
         try {
-            const res = await axios.post(`https://star-nova-xce5.vercel.app/${url}`, authData);
+            const res = await axios.post(`https://starnova.onrender.com${url}`, authData);
             setToken(res.data.token);
             setUser(res.data.user);
             localStorage.setItem('token', res.data.token);
