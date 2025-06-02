@@ -41,7 +41,7 @@ function Profile() {
             setLoading(true);
             setError(null);
             try {
-                const userRes = await axios.get('http://localhost:5000/api/profile', {
+                const userRes = await axios.get('https://starnova.onrender.com/api/profile', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (!isMounted) return;
@@ -308,7 +308,7 @@ function Home() {
 
         const fetchAuditions = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/auditions', {
+                const res = await axios.get('https://starnova.onrender.com/api/auditions', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (isMounted) setAuditions(res.data || []);
@@ -323,7 +323,7 @@ function Home() {
         const fetchRecommendations = async () => {
             if (token && user && user.role === 'user') {
                 try {
-                    const res = await axios.get('http://localhost:5000/api/auditions/recommendations', {
+                    const res = await axios.get('https://starnova.onrender.com/api/auditions/recommendations', {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (isMounted) setRecommendedAuditions(res.data || []);
@@ -561,7 +561,7 @@ function Home() {
                 };
             }
 
-            const res = await axios.post('http://localhost:5000/api/auditions', auditionData, {
+            const res = await axios.post('https://starnova.onrender.com/api/auditions', auditionData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setAuditions([...auditions, res.data]);
@@ -599,7 +599,7 @@ function Home() {
             setError('Please log in to like an audition');
             return;
         }
-        axios.post(`http://localhost:5000/api/auditions/${auditionId}/like`, {}, {
+        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/like`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -623,7 +623,7 @@ function Home() {
             setError('Please enter a comment');
             return;
         }
-        axios.post(`http://localhost:5000/api/auditions/${auditionId}/comment`, { text: commentText[auditionId] }, {
+        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/comment`, { text: commentText[auditionId] }, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -655,7 +655,7 @@ function Home() {
             setError('Please log in to bookmark');
             return;
         }
-        axios.post(`http://localhost:5000/api/auditions/${auditionId}/bookmark`, {}, {
+        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/bookmark`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -679,7 +679,7 @@ function Home() {
             setError('Please provide a description');
             return;
         }
-        axios.post(`http://localhost:5000/api/auditions/${auditionId}/submit-talent`, submission, {
+        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/submit-talent`, submission, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
