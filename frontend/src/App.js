@@ -1,8 +1,7 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { format } from 'date-fns';
-import DOMPurify from 'dompurify';
 import './App.css';
 
 // Haversine formula to calculate distance between two coordinates (in kilometers)
@@ -30,14 +29,6 @@ function Profile() {
     const [error, setError] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false);
 
-    const handleLogout = useCallback(() => {
-        setToken('');
-        setUser(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/');
-    }, [navigate]);
-
     useEffect(() => {
         if (!token || !user) {
             navigate('/');
@@ -50,23 +41,25 @@ function Profile() {
             setLoading(true);
             setError(null);
             try {
-                const [userRes, submissionsRes, notificationsRes] = await Promise.all([
-                    axios.get('https://starnova.onrender.com/api/profile', {
+                const userRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/profile`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!isMounted) return;
+                setUser(userRes.data.user);
+
+                const [submissionsRes, notificationsRes] = await Promise.all([
+                    axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/submissions`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
-                    axios.get('https://starnova.onrender.com/api/submissions', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    axios.get('https://starnova.onrender.com/api/notifications', {
+                    axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/notifications`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
 
                 if (!isMounted) return;
-                setUser(userRes.data.user);
-                setSubmissions(submissionsRes.data.filter(sub => sub.user?._id === userRes.data.user._id));
+                setSubmissions(submissionsRes.data.filter(sub => sub.user?._id === user.id));
                 setNotifications(notificationsRes.data);
-                setBookmarks(userRes.data.user.bookmarks || []);
+                setBookmarks(user.bookmarks || []);
             } catch (err) {
                 if (isMounted) {
                     setError('Failed to load profile data. Please try again.');
@@ -85,7 +78,15 @@ function Profile() {
         return () => {
             isMounted = false;
         };
-    }, [token, user, handleLogout]);
+    }, [token, user, navigate]);
+
+    const handleLogout = () => {
+        setToken('');
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/');
+    };
 
     const toggleMenu = () => {
         setMenuOpen(!menuOpen);
@@ -95,7 +96,7 @@ function Profile() {
         <div className="app-container">
             <header className="header">
                 <Link to="/" className="logo">Auditions Platform</Link>
-                <i className="fas fa-bars menu-icon" onClick={toggleMenu} aria-label="Toggle menu"></i>
+                <i className="fas fa-bars menu-icon" onClick={toggleMenu}></i>
                 <nav className={`nav-links ${menuOpen ? 'active' : ''}`}>
                     <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}><i className="fas fa-home"></i> Home</Link>
                     <Link to="/profile" className="nav-link" onClick={() => setMenuOpen(false)}><i className="fas fa-user"></i> Profile</Link>
@@ -105,7 +106,6 @@ function Profile() {
                             setMenuOpen(false);
                         }}
                         className="auth-button sign-in"
-                        aria-label="Log out"
                     >
                         <i className="fas fa-sign-out-alt"></i> Log Out
                     </button>
@@ -137,7 +137,7 @@ function Profile() {
                                         {notifications.map((notification, index) => (
                                             <div key={index} className="notification">
                                                 <p>{notification.message}</p>
-                                                <p><small>{format(new Date(notification.createdAt), 'PPp')}</small></p>
+                                                <p><small>{new Date(notification.createdAt).toLocaleString()}</small></p>
                                             </div>
                                         ))}
                                     </div>
@@ -200,7 +200,7 @@ function Profile() {
                                             <div key={audition._id} className="audition-card" onClick={() => window.alert(`View details for: ${audition.title}`)}>
                                                 <h3 className="audition-title">{audition.title}</h3>
                                                 <p className="audition-description">{audition.description}</p>
-                                                <p className="audition-date">Date: {format(new Date(audition.date), 'PP')}</p>
+                                                <p className="audition-date">Date: {audition.date}</p>
                                                 <p className="audition-location">
                                                     Location: {audition.location?.name || 'Not specified'}
                                                 </p>
@@ -220,12 +220,12 @@ function Profile() {
             <footer className="footer">
                 <div className="footer-content">
                     <div className="footer-socials">
-                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fab fa-facebook-f"></i></a>
-                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i className="fab fa-twitter"></i></a>
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i className="fab fa-instagram"></i></a>
-                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fab fa-linkedin-in"></i></a>
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
+                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin-in"></i></a>
                     </div>
-                    <p className="footer-text">© {new Date().getFullYear()} Auditions Platform. All rights reserved.</p>
+                    <p className="footer-text">© 2025 Auditions Platform. All rights reserved.</p>
                 </div>
             </footer>
         </div>
@@ -266,13 +266,20 @@ function Home() {
     const [talentSubmission, setTalentSubmission] = useState({});
     const [userLocation, setUserLocation] = useState(null);
     const [manualLocation, setManualLocation] = useState('');
-    const [distanceThreshold, setDistanceThreshold] = useState(100);
-    const [auditionsLoading, setAuditionsLoading] = useState(true);
-    const [recommendationsLoading, setRecommendationsLoading] = useState(true);
-    const [nearbyLoading, setNearbyLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const [selectedAudition, setSelectedAudition] = useState(null);
+
+    const handleLogout = useCallback(() => {
+        setToken('');
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setNearbyAuditions([]);
+        setRecommendedAuditions([]);
+        navigate('/');
+    }, [navigate]);
 
     useEffect(() => {
         let isMounted = true;
@@ -280,7 +287,7 @@ function Home() {
         const fetchUserData = async () => {
             if (token) {
                 try {
-                    const res = await axios.get('https://starnova.onrender.com/api/profile', {
+                    const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/profile`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (isMounted) {
@@ -304,15 +311,14 @@ function Home() {
         return () => {
             isMounted = false;
         };
-    }, [token]);
+    }, [token, handleLogout]);
 
     useEffect(() => {
         let isMounted = true;
 
         const fetchAuditions = async () => {
-            setAuditionsLoading(true);
             try {
-                const res = await axios.get('https://starnova.onrender.com/api/auditions', {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (isMounted) setAuditions(res.data || []);
@@ -321,26 +327,13 @@ function Home() {
                     setError('Failed to fetch auditions.');
                     console.error('Error fetching auditions:', err);
                 }
-            } finally {
-                if (isMounted) setAuditionsLoading(false);
             }
         };
 
-        fetchAuditions();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [token]);
-
-    useEffect(() => {
-        let isMounted = true;
-
         const fetchRecommendations = async () => {
             if (token && user && user.role === 'user') {
-                setRecommendationsLoading(true);
                 try {
-                    const res = await axios.get('https://starnova.onrender.com/api/auditions/recommendations', {
+                    const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions/recommendations`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (isMounted) setRecommendedAuditions(res.data || []);
@@ -348,25 +341,29 @@ function Home() {
                     if (isMounted) {
                         console.error('Error fetching recommendations:', err);
                         setError('Failed to load recommended auditions.');
+                        if (err.response?.status === 401) {
+                            handleLogout();
+                        }
                     }
-                } finally {
-                    if (isMounted) setRecommendationsLoading(false);
                 }
             }
         };
 
+        fetchAuditions();
         fetchRecommendations();
 
         return () => {
             isMounted = false;
         };
-    }, [token, user]);
+    }, [token, user, handleLogout]);
 
     useEffect(() => {
         let isMounted = true;
 
-        const fetchLocation = async () => {
-            setNearbyLoading(true);
+        const fetchLocationAndNearby = async () => {
+            setLoading(true);
+            setError(null);
+
             try {
                 const locationPromise = new Promise((resolve) => {
                     if (navigator.geolocation) {
@@ -375,8 +372,7 @@ function Home() {
                                 const { latitude, longitude } = position.coords;
                                 try {
                                     const response = await fetch(
-                                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-                                        { headers: { 'User-Agent': 'AuditionsPlatform/1.0 (contact@example.com)' } }
+                                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
                                     );
                                     const data = await response.json();
                                     const city = data.address.city || data.address.town || data.address.village || 'Unknown';
@@ -386,63 +382,77 @@ function Home() {
                                     resolve({ latitude: 40.7128, longitude: -74.0060, name: 'New York, NY' });
                                 }
                             },
-                            () => resolve({ latitude: 40.7128, longitude: -74.0060, name: 'New York, NY' })
+                            () => {
+                                resolve({ latitude: 40.7128, longitude: -74.0060, name: 'New York, NY' });
+                            }
                         );
                     } else {
                         resolve({ latitude: 40.7128, longitude: -74.0060, name: 'New York, NY' });
                     }
                 });
 
-                const fetchedLocation = await locationPromise;
+                const [fetchedLocation] = await Promise.all([locationPromise]);
                 if (!isMounted) return;
+
                 setUserLocation(fetchedLocation);
+
+                const sortedAuditions = auditions
+                    .filter((audition) => audition.location?.coordinates?.latitude && audition.location?.coordinates?.longitude)
+                    .map((audition) => {
+                        const distance = calculateDistance(
+                            fetchedLocation.latitude,
+                            fetchedLocation.longitude,
+                            audition.location.coordinates.latitude,
+                            audition.location.coordinates.longitude
+                        );
+                        return { ...audition, distance };
+                    })
+                    .sort((a, b) => a.distance - b.distance);
+
+                setNearbyAuditions(sortedAuditions.filter((audition) => audition.distance <= 100));
             } catch (err) {
                 if (isMounted) {
-                    setError('Failed to fetch location.');
+                    setError('Failed to load location or nearby auditions.');
                     console.error(err);
                 }
             } finally {
-                if (isMounted) setNearbyLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
-        fetchLocation();
+        fetchLocationAndNearby();
 
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [auditions]);
 
     useEffect(() => {
-        if (!userLocation || !auditions.length) return;
+        if (isSignInVisible) {
+            setAnimateSignIn(true);
+            const timer = setTimeout(() => setAnimateSignIn(false), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [isSignInVisible]);
 
-        const sortedAuditions = auditions
-            .filter((audition) => audition.location?.coordinates?.latitude && audition.location?.coordinates?.longitude)
-            .map((audition) => {
-                const distance = calculateDistance(
-                    userLocation.latitude,
-                    userLocation.longitude,
-                    audition.location.coordinates.latitude,
-                    audition.location.coordinates.longitude
-                );
-                return { ...audition, distance };
-            })
-            .sort((a, b) => a.distance - b.distance);
-
-        setNearbyAuditions(sortedAuditions.filter((audition) => audition.distance <= distanceThreshold));
-    }, [userLocation, auditions, distanceThreshold]);
+    useEffect(() => {
+        if (isSignUpVisible) {
+            setAnimateSignUp(true);
+            const timer = setTimeout(() => setAnimateSignUp(false), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [isSignUpVisible]);
 
     const handleManualLocationSearch = useCallback(async () => {
         if (!manualLocation) {
             setError('Please enter a location');
             return;
         }
-        setNearbyLoading(true);
+        setLoading(true);
         setError(null);
         try {
             const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(manualLocation)}`,
-                { headers: { 'User-Agent': 'AuditionsPlatform/1.0 (contact@example.com)' } }
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(manualLocation)}`
             );
             const data = await response.json();
             if (data.length > 0) {
@@ -463,7 +473,7 @@ function Home() {
                     })
                     .sort((a, b) => a.distance - b.distance);
 
-                setNearbyAuditions(sortedAuditions.filter((audition) => audition.distance <= distanceThreshold));
+                setNearbyAuditions(sortedAuditions.filter((audition) => audition.distance <= 100));
             } else {
                 setError('Location not found');
             }
@@ -471,9 +481,9 @@ function Home() {
             setError('Error fetching location');
             console.error(err);
         } finally {
-            setNearbyLoading(false);
+            setLoading(false);
         }
-    }, [manualLocation, auditions, distanceThreshold]);
+    }, [manualLocation, auditions]);
 
     const handleAuthChange = (e) => {
         setAuthData({ ...authData, [e.target.name]: e.target.value });
@@ -483,7 +493,7 @@ function Home() {
         e.preventDefault();
         const url = isSignInVisible ? '/api/login' : '/api/register';
         try {
-            const res = await axios.post(`https://starnova.onrender.com${url}`, authData);
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${url}`, authData);
             setToken(res.data.token);
             setUser(res.data.user);
             localStorage.setItem('token', res.data.token);
@@ -497,29 +507,14 @@ function Home() {
         }
     };
 
-    const handleLogout = useCallback(() => {
-        setToken('');
-        setUser(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setNearbyAuditions([]);
-        setRecommendedAuditions([]);
-        navigate('/');
-    }, [navigate]);
-
     const handleInputChange = (e) => {
         if (e.target.name.startsWith('criteriaWeights.')) {
             const field = e.target.name.split('.')[1];
-            const value = parseFloat(e.target.value) || 0;
-            if (value < 0 || value > 1) {
-                setError(`${field.charAt(0).toUpperCase() + field.slice(1)} weight must be between 0 and 1`);
-                return;
-            }
             setNewAudition({
                 ...newAudition,
                 criteriaWeights: {
                     ...newAudition.criteriaWeights,
-                    [field]: value,
+                    [field]: parseFloat(e.target.value) || 0,
                 },
             });
         } else {
@@ -547,8 +542,7 @@ function Home() {
         try {
             let auditionData;
             const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newAudition.location)}`,
-                { headers: { 'User-Agent': 'AuditionsPlatform/1.0 (contact@example.com)' } }
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newAudition.location)}`
             );
             const data = await response.json();
             if (data.length === 0) {
@@ -570,7 +564,7 @@ function Home() {
                 };
             }
 
-            const res = await axios.post('https://starnova.onrender.com/api/auditions', auditionData, {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions`, auditionData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setAuditions([...auditions, res.data]);
@@ -594,7 +588,7 @@ function Home() {
                         ),
                     }))
                     .sort((a, b) => a.distance - b.distance);
-                setNearbyAuditions(sortedAuditions.filter(a => a.distance <= distanceThreshold));
+                setNearbyAuditions(sortedAuditions.filter(a => a.distance <= 100));
             }
             setError(null);
         } catch (err) {
@@ -608,7 +602,7 @@ function Home() {
             setError('Please log in to like an audition');
             return;
         }
-        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/like`, {}, {
+        axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions/${auditionId}/like`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -632,7 +626,7 @@ function Home() {
             setError('Please enter a comment');
             return;
         }
-        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/comment`, { text: commentText[auditionId] }, {
+        axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions/${auditionId}/comment`, { text: commentText[auditionId] }, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -664,7 +658,7 @@ function Home() {
             setError('Please log in to bookmark');
             return;
         }
-        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/bookmark`, {}, {
+        axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions/${auditionId}/bookmark`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -688,7 +682,7 @@ function Home() {
             setError('Please provide a description');
             return;
         }
-        axios.post(`https://starnova.onrender.com/api/auditions/${auditionId}/submit-talent`, submission, {
+        axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions/${auditionId}/submit-talent`, submission, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => {
@@ -723,8 +717,6 @@ function Home() {
         setIsSignInVisible(!isSignInVisible);
         setIsSignUpVisible(false);
         setMenuOpen(false);
-        setAnimateSignIn(true);
-        setTimeout(() => setAnimateSignIn(false), 300);
     };
 
     const handleSignUpClick = (e) => {
@@ -733,15 +725,13 @@ function Home() {
         setIsSignUpVisible(!isSignUpVisible);
         setIsSignInVisible(false);
         setMenuOpen(false);
-        setAnimateSignUp(true);
-        setTimeout(() => setAnimateSignUp(false), 300);
     };
 
     return (
         <div className="app-container">
             <header className="header">
                 <Link to="/" className="logo">Auditions Platform</Link>
-                <i className="fas fa-bars menu-icon" onClick={toggleMenu} aria-label="Toggle menu"></i>
+                <i className="fas fa-bars menu-icon" onClick={toggleMenu}></i>
                 <nav className={`nav-links ${menuOpen ? 'active' : ''}`}>
                     <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}><i className="fas fa-home"></i> Home</Link>
                     <Link to="/profile" className="nav-link" onClick={() => setMenuOpen(false)}><i className="fas fa-user"></i> Profile</Link>
@@ -752,7 +742,6 @@ function Home() {
                                 setMenuOpen(false);
                             }}
                             className="auth-button sign-in"
-                            aria-label="Log out"
                         >
                             <i className="fas fa-sign-out-alt"></i> Log Out
                         </button>
@@ -761,14 +750,12 @@ function Home() {
                             <button
                                 onClick={handleSignInClick}
                                 className="auth-button sign-in"
-                                aria-label="Sign in"
                             >
                                 <i className="fas fa-sign-in-alt"></i> Sign In
                             </button>
                             <button
                                 onClick={handleSignUpClick}
                                 className="auth-button join"
-                                aria-label="Sign up"
                             >
                                 <i className="fas fa-user-plus"></i> Sign Up
                             </button>
@@ -790,15 +777,6 @@ function Home() {
                             onChange={(e) => setManualLocation(e.target.value)}
                             placeholder="Enter your location (e.g., New York, NY)"
                             className="form-input"
-                            aria-label="Location search"
-                        />
-                        <input
-                            type="number"
-                            value={distanceThreshold}
-                            onChange={(e) => setDistanceThreshold(parseInt(e.target.value) || 100)}
-                            placeholder="Max distance (km)"
-                            className="form-input"
-                            aria-label="Maximum distance in kilometers"
                         />
                         <button onClick={handleManualLocationSearch} className="hero-button">
                             Search
@@ -814,7 +792,9 @@ function Home() {
                         {isSignInVisible && (
                             <div
                                 className={`auth-card ${animateSignIn ? 'animate' : ''}`}
-                                style={{ transformOrigin: `${clickPosition.x}px ${clickPosition.y}px` }}
+                                style={{
+                                    transformOrigin: `${clickPosition.x}px ${clickPosition.y}px`,
+                                }}
                             >
                                 <h2 className="form-title">Log In</h2>
                                 <form onSubmit={handleAuthSubmit}>
@@ -827,7 +807,6 @@ function Home() {
                                             onChange={handleAuthChange}
                                             className="form-input"
                                             required
-                                            aria-label="Email"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -839,7 +818,6 @@ function Home() {
                                             onChange={handleAuthChange}
                                             className="form-input"
                                             required
-                                            aria-label="Password"
                                         />
                                     </div>
                                     <button type="submit" className="submit-button">
@@ -864,7 +842,9 @@ function Home() {
                         {isSignUpVisible && (
                             <div
                                 className={`auth-card ${animateSignUp ? 'animate' : ''}`}
-                                style={{ transformOrigin: `${clickPosition.x}px ${clickPosition.y}px` }}
+                                style={{
+                                    transformOrigin: `${clickPosition.x}px ${clickPosition.y}px`,
+                                }}
                             >
                                 <h2 className="form-title">Sign Up</h2>
                                 <form onSubmit={handleAuthSubmit}>
@@ -877,7 +857,6 @@ function Home() {
                                             onChange={handleAuthChange}
                                             className="form-input"
                                             required
-                                            aria-label="Email"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -889,7 +868,6 @@ function Home() {
                                             onChange={handleAuthChange}
                                             className="form-input"
                                             required
-                                            aria-label="Password"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -901,7 +879,6 @@ function Home() {
                                             onChange={handleAuthChange}
                                             className="form-input"
                                             required
-                                            aria-label="Username"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -911,7 +888,6 @@ function Home() {
                                             value={authData.role}
                                             onChange={handleAuthChange}
                                             className="form-input"
-                                            aria-label="Role"
                                         >
                                             <option value="user">User</option>
                                             <option value="organizer">Organizer</option>
@@ -957,7 +933,6 @@ function Home() {
                                     onChange={handleInputChange}
                                     className="form-input"
                                     required
-                                    aria-label="Audition title"
                                 />
                             </div>
                             <div className="form-group">
@@ -968,7 +943,6 @@ function Home() {
                                     onChange={handleInputChange}
                                     className="form-textarea"
                                     required
-                                    aria-label="Audition description"
                                 />
                             </div>
                             <div className="form-group">
@@ -980,7 +954,6 @@ function Home() {
                                     onChange={handleInputChange}
                                     className="form-input"
                                     required
-                                    aria-label="Audition date"
                                 />
                             </div>
                             <div className="form-group">
@@ -993,7 +966,6 @@ function Home() {
                                     className="form-input"
                                     placeholder="e.g., New York, NY"
                                     required
-                                    aria-label="Audition location"
                                 />
                             </div>
                             <div className="form-group">
@@ -1011,7 +983,6 @@ function Home() {
                                                 value={newAudition.criteriaWeights[field]}
                                                 onChange={handleInputChange}
                                                 className="form-input"
-                                                aria-label={`${field} weight`}
                                             />
                                         </div>
                                     ))}
@@ -1028,8 +999,8 @@ function Home() {
                     {user && user.role === 'user' && (
                         <>
                             <h2 className="section-title">Recommended Auditions</h2>
-                            {recommendationsLoading ? (
-                                <div className="loading-spinner">Loading recommended auditions...</div>
+                            {loading ? (
+                                <div className="loading-spinner">Loading...</div>
                             ) : error ? (
                                 <div className="error-message">{error}</div>
                             ) : recommendedAuditions.length === 0 ? (
@@ -1039,10 +1010,10 @@ function Home() {
                             ) : (
                                 <div className="auditions-grid">
                                     {recommendedAuditions.map((audition) => (
-                                        <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)} role="button" tabIndex={0} onKeyPress={(e) => e.key === 'Enter' && openAuditionDetails(audition)}>
+                                        <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)}>
                                             <h3 className="audition-title">{audition.title}</h3>
                                             <p className="audition-description">{audition.description.substring(0, 100) + '...'}</p>
-                                            <p className="audition-date">Date: {format(new Date(audition.date), 'PP')}</p>
+                                            <p className="audition-date">Date: {audition.date}</p>
                                             <p className="audition-location">
                                                 Location: {audition.location?.name || 'Not specified'}
                                                 {userLocation && audition.location?.coordinates?.latitude && audition.location?.coordinates?.longitude && (
@@ -1058,14 +1029,14 @@ function Home() {
                                                 )}
                                             </p>
                                             <div className="interaction-container">
-                                                <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button" aria-label={`Like audition ${audition.title}`}>
-                                                    <i className={audition.likes.includes(user?._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
+                                                <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button">
+                                                    <i className={audition.likes.includes(user?.id) ? 'fas fa-heart' : 'far fa-heart'}></i>
                                                     {audition.likes.length}
                                                 </button>
-                                                <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button" aria-label={`Share audition ${audition.title}`}>
+                                                <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button">
                                                     <i className="fas fa-share"></i> Share
                                                 </button>
-                                                <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button" aria-label={`${user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'} audition ${audition.title}`}>
+                                                <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button">
                                                     <i className={user?.bookmarks?.includes(audition._id) ? 'fas fa-bookmark' : 'far fa-bookmark'}></i>
                                                     {user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'}
                                                 </button>
@@ -1078,8 +1049,8 @@ function Home() {
                     )}
 
                     <h2 className="section-title">Nearby Auditions</h2>
-                    {nearbyLoading ? (
-                        <div className="loading-spinner">Loading nearby auditions...</div>
+                    {loading ? (
+                        <div className="loading-spinner">Loading...</div>
                     ) : error ? (
                         <div className="error-message">{error}</div>
                     ) : nearbyAuditions.length === 0 ? (
@@ -1089,10 +1060,10 @@ function Home() {
                     ) : (
                         <div className="auditions-grid">
                             {nearbyAuditions.map((audition) => (
-                                <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)} role="button" tabIndex={0} onKeyPress={(e) => e.key === 'Enter' && openAuditionDetails(audition)}>
+                                <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)}>
                                     <h3 className="audition-title">{audition.title}</h3>
                                     <p className="audition-description">{audition.description.substring(0, 100) + '...'}</p>
-                                    <p className="audition-date">Date: {format(new Date(audition.date), 'PP')}</p>
+                                    <p className="audition-date">Date: {audition.date}</p>
                                     <p className="audition-location">
                                         Location: {audition.location?.name || 'Not specified'}
                                         {userLocation && audition.location?.coordinates?.latitude && audition.location?.coordinates?.longitude && (
@@ -1103,14 +1074,14 @@ function Home() {
                                         )}
                                     </p>
                                     <div className="interaction-container">
-                                        <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button" aria-label={`Like audition ${audition.title}`}>
-                                            <i className={audition.likes.includes(user?._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
+                                        <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button">
+                                            <i className={audition.likes.includes(user?.id) ? 'fas fa-heart' : 'far fa-heart'}></i>
                                             {audition.likes.length}
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button" aria-label={`Share audition ${audition.title}`}>
+                                        <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button">
                                             <i className="fas fa-share"></i> Share
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button" aria-label={`${user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'} audition ${audition.title}`}>
+                                        <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button">
                                             <i className={user?.bookmarks?.includes(audition._id) ? 'fas fa-bookmark' : 'far fa-bookmark'}></i>
                                             {user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'}
                                         </button>
@@ -1121,8 +1092,8 @@ function Home() {
                     )}
 
                     <h2 className="section-title">All Auditions</h2>
-                    {auditionsLoading ? (
-                        <div className="loading-spinner">Loading all auditions...</div>
+                    {loading ? (
+                        <div className="loading-spinner">Loading...</div>
                     ) : error ? (
                         <div className="error-message">{error}</div>
                     ) : auditions.length === 0 ? (
@@ -1130,10 +1101,10 @@ function Home() {
                     ) : (
                         <div className="auditions-grid">
                             {auditions.map((audition) => (
-                                <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)} role="button" tabIndex={0} onKeyPress={(e) => e.key === 'Enter' && openAuditionDetails(audition)}>
+                                <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)}>
                                     <h3 className="audition-title">{audition.title}</h3>
                                     <p className="audition-description">{audition.description.substring(0, 100) + '...'}</p>
-                                    <p className="audition-date">Date: {format(new Date(audition.date), 'PP')}</p>
+                                    <p className="audition-date">Date: {audition.date}</p>
                                     <p className="audition-location">
                                         Location: {audition.location?.name || 'Not specified'}
                                         {userLocation && audition.location?.coordinates?.latitude && audition.location?.coordinates?.longitude && (
@@ -1149,14 +1120,14 @@ function Home() {
                                         )}
                                     </p>
                                     <div className="interaction-container">
-                                        <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button" aria-label={`Like audition ${audition.title}`}>
-                                            <i className={audition.likes.includes(user?._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
+                                        <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button">
+                                            <i className={audition.likes.includes(user?.id) ? 'fas fa-heart' : 'far fa-heart'}></i>
                                             {audition.likes.length}
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button" aria-label={`Share audition ${audition.title}`}>
+                                        <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button">
                                             <i className="fas fa-share"></i> Share
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button" aria-label={`${user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'} audition ${audition.title}`}>
+                                        <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button">
                                             <i className={user?.bookmarks?.includes(audition._id) ? 'fas fa-bookmark' : 'far fa-bookmark'}></i>
                                             {user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'}
                                         </button>
@@ -1169,11 +1140,11 @@ function Home() {
             </div>
 
             {selectedAudition && (
-                <div className="modal" onClick={closeAuditionDetails} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                <div className="modal" onClick={closeAuditionDetails}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <h2 id="modal-title" className="audition-title">{selectedAudition.title}</h2>
+                        <h2 className="audition-title">{selectedAudition.title}</h2>
                         <p className="audition-description">{selectedAudition.description}</p>
-                        <p className="audition-date">Date: {format(new Date(selectedAudition.date), 'PP')}</p>
+                        <p className="audition-date">Date: {selectedAudition.date}</p>
                         <p className="audition-location">
                             Location: {selectedAudition.location?.name || 'Not specified'}
                             {userLocation && selectedAudition.location?.coordinates?.latitude && selectedAudition.location?.coordinates?.longitude && (
@@ -1192,14 +1163,14 @@ function Home() {
                             Posted by: {selectedAudition.createdBy?.email || 'Unknown'}
                         </p>
                         <div className="interaction-container">
-                            <button onClick={(e) => { e.stopPropagation(); handleLike(selectedAudition._id); closeAuditionDetails(); }} className="interaction-button" aria-label={`Like audition ${selectedAudition.title}`}>
-                                <i className={selectedAudition.likes.includes(user?._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
+                            <button onClick={(e) => { e.stopPropagation(); handleLike(selectedAudition._id); closeAuditionDetails(); }} className="interaction-button">
+                                <i className={selectedAudition.likes.includes(user?.id) ? 'fas fa-heart' : 'far fa-heart'}></i>
                                 {selectedAudition.likes.length}
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleShare(selectedAudition._id); closeAuditionDetails(); }} className="interaction-button" aria-label={`Share audition ${selectedAudition.title}`}>
+                            <button onClick={(e) => { e.stopPropagation(); handleShare(selectedAudition._id); closeAuditionDetails(); }} className="interaction-button">
                                 <i className="fas fa-share"></i> Share
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleBookmark(selectedAudition._id); closeAuditionDetails(); }} className="interaction-button" aria-label={`${user?.bookmarks?.includes(selectedAudition._id) ? 'Unbookmark' : 'Bookmark'} audition ${selectedAudition.title}`}>
+                            <button onClick={(e) => { e.stopPropagation(); handleBookmark(selectedAudition._id); closeAuditionDetails(); }} className="interaction-button">
                                 <i className={user?.bookmarks?.includes(selectedAudition._id) ? 'fas fa-bookmark' : 'far fa-bookmark'}></i>
                                 {user?.bookmarks?.includes(selectedAudition._id) ? 'Unbookmark' : 'Bookmark'}
                             </button>
@@ -1208,10 +1179,7 @@ function Home() {
                             <h4>Comments</h4>
                             {selectedAudition.comments.map((comment, index) => (
                                 <div key={index} className="comment">
-                                    <p>
-                                        <strong>{comment.user?.email || 'Unknown'}:</strong>{' '}
-                                        <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.text) }} />
-                                    </p>
+                                    <p><strong>{comment.user?.email || 'Unknown'}:</strong> {comment.text}</p>
                                 </div>
                             ))}
                             {user && (
@@ -1222,9 +1190,8 @@ function Home() {
                                         onChange={(e) => setCommentText({ ...commentText, [selectedAudition._id]: e.target.value })}
                                         placeholder="Add a comment..."
                                         className="form-input"
-                                        aria-label="Comment input"
                                     />
-                                    <button onClick={(e) => { e.stopPropagation(); handleComment(selectedAudition._id); }} className="submit-button" aria-label="Submit comment">
+                                    <button onClick={(e) => { e.stopPropagation(); handleComment(selectedAudition._id); }} className="submit-button">
                                         <i className="fas fa-paper-plane"></i>
                                     </button>
                                 </div>
@@ -1244,7 +1211,6 @@ function Home() {
                                             })}
                                             placeholder="Describe your talent..."
                                             className="form-textarea"
-                                            aria-label="Talent description"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -1258,10 +1224,9 @@ function Home() {
                                             })}
                                             placeholder="e.g., https://youtube.com/watch?v=..."
                                             className="form-input"
-                                            aria-label="Video URL"
                                         />
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); handleTalentSubmit(selectedAudition._id); }} className="submit-button" aria-label="Submit talent">
+                                    <button onClick={(e) => { e.stopPropagation(); handleTalentSubmit(selectedAudition._id); }} className="submit-button">
                                         Submit Talent
                                     </button>
                                 </div>
@@ -1316,7 +1281,7 @@ function Home() {
                                 )}
                             </div>
                         )}
-                        <button onClick={closeAuditionDetails} className="submit-button close-button" aria-label="Close audition details">
+                        <button onClick={closeAuditionDetails} className="submit-button close-button">
                             Close
                         </button>
                     </div>
@@ -1326,47 +1291,26 @@ function Home() {
             <footer className="footer">
                 <div className="footer-content">
                     <div className="footer-socials">
-                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fab fa-facebook-f"></i></a>
-                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i className="fab fa-twitter"></i></a>
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i className="fab fa-instagram"></i></a>
-                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fab fa-linkedin-in"></i></a>
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
+                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin-in"></i></a>
                     </div>
-                    <p className="footer-text">© {new Date().getFullYear()} Auditions Platform. All rights reserved.</p>
+                    <p className="footer-text">© 2025 Auditions Platform. All rights reserved.</p>
                 </div>
             </footer>
         </div>
     );
 }
 
-class ErrorBoundary extends React.Component {
-    state = { hasError: false };
-
-    static getDerivedStateFromError(error) {
-        return { hasError: true };
-    }
-
-    componentDidCatch(error, errorInfo) {
-        console.error('ErrorBoundary caught an error:', error, errorInfo);
-    }
-
-    render() {
-        if (this.state.hasError) {
-            return <h1>Something went wrong. Please try again later.</h1>;
-        }
-        return this.props.children;
-    }
-}
-
 function App() {
     return (
-        <ErrorBoundary>
-            <Router>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/profile" element={<Profile />} />
-                </Routes>
-            </Router>
-        </ErrorBoundary>
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/profile" element={<Profile />} />
+            </Routes>
+        </Router>
     );
 }
 
