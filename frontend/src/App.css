@@ -535,22 +535,24 @@ body {
     margin: 0 auto;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 .footer-socials {
     display: flex;
-    gap: 15px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
 }
 
 .footer-socials a {
     color: #f1f5f9;
     font-size: 1.5em;
     text-decoration: none;
-}
-
-.footer-socials a:hover {
-    color: #D8BFD8;
+    line-height: 1;
 }
 
 /* Auth Cards Animation */
@@ -701,7 +703,7 @@ body {
     }
 
     .footer-content {
-        gap: 15px;
+        gap: 12px;
     }
 
     .footer-socials a {
@@ -753,12 +755,13 @@ body {
     }
 
     .footer-content {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 10px;
     }
 
     .footer-socials {
-        gap: 12px;
+        gap: 10px;
     }
 }
 
@@ -905,7 +908,14 @@ body {
     }
 
     .footer-content {
-        gap: 10px;
+        gap: 8px;
+        padding: 0 10px;
+    }
+
+    .footer-socials {
+        gap: 8px;
+        max-width: 100%;
+        flex-wrap: wrap;
     }
 
     .footer-socials a {
