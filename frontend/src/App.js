@@ -48,7 +48,7 @@ function Profile() {
                 setUser(userRes.data.user);
 
                 const [submissionsRes, notificationsRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/submissions', {
+                    axios.get('https://starnova.onrender.com/api/submissions', {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                     axios.get('http://localhost:5000/api/notifications', {
@@ -277,7 +277,7 @@ function Home() {
         const fetchUserData = async () => {
             if (token) {
                 try {
-                    const res = await axios.get('http://localhost:5000/api/profile', {
+                    const res = await axios.get('https://starnova.onrender.com/api/profile', {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (isMounted) {
@@ -480,7 +480,7 @@ function Home() {
         e.preventDefault();
         const url = isSignInVisible ? '/api/login' : '/api/register';
         try {
-            const res = await axios.post(`https://star-nova-5f8m.vercel.app/${url}`, authData);
+            const res = await axios.post(`https://star-nova-xce5.vercel.app/${url}`, authData);
             setToken(res.data.token);
             setUser(res.data.user);
             localStorage.setItem('token', res.data.token);
