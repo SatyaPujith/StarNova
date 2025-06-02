@@ -1,3 +1,4 @@
+/* App.css */
 * {
     margin: 0;
     padding: 0;
@@ -5,7 +6,7 @@
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -48,6 +49,7 @@ body {
     font-weight: 700;
     color: #E6E6FA;
     text-decoration: none;
+    font-family: 'Cinzel Decorative', cursive;
     transition: color 0.4s ease;
 }
 
@@ -161,6 +163,7 @@ body {
 .hero-title {
     font-size: 4em;
     margin: 0 0 25px;
+    font-family: 'Cinzel Decorative', cursive;
     text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.8);
     animation: fadeInDown 1s ease-out;
 }
@@ -226,6 +229,7 @@ body {
 .form-title {
     text-align: center;
     margin-bottom: 25px;
+    font-family: 'Cinzel Decorative', cursive;
     color: #E6E6FA;
     font-size: 2.2em;
     text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.6);
@@ -341,6 +345,7 @@ body {
 .section-title {
     color: #E6E6FA;
     margin-bottom: 25px;
+    font-family: 'Cinzel Decorative', cursive;
     font-size: 2.5em;
     text-align: center;
     text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.8);
@@ -384,6 +389,7 @@ body {
 .audition-title {
     margin: 0 0 20px;
     color: #E6E6FA;
+    font-family: 'Cinzel Decorative', cursive;
     font-size: 1.8em;
     text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.6);
 }
@@ -522,37 +528,53 @@ body {
 
 /* Footer Styles */
 .footer {
-    background: #0f172a;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(15px);
     color: #f1f5f9;
-    padding: 20px;
+    padding: 40px 20px;
     text-align: center;
-    margin-top: 30px;
-    border-top: 1px solid #4B0082;
+    margin-top: 50px;
+    border-top: 2px solid rgba(75, 0, 130, 0.2);
 }
 
 .footer-content {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
 }
 
 .footer-socials {
+    margin-bottom: 25px;
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
     justify-content: center;
-    max-width: 100%;
+    gap: 25px;
 }
 
 .footer-socials a {
     color: #f1f5f9;
-    font-size: 1.5em;
-    text-decoration: none;
-    line-height: 1;
+    font-size: 2em;
+    transition: all 0.4s ease;
+    padding: 12px;
+    border-radius: 50%;
+    background: rgba(75, 0, 130, 0.1);
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.footer-socials a:hover {
+    color: #E6E6FA;
+    background: rgba(230, 230, 250, 0.2);
+    transform: rotate(15deg) scale(1.2);
+    box-shadow: 5px 5px 15px rgba(230, 230, 250, 0.5);
+}
+
+.footer-text {
+    margin: 15px 0;
+    font-size: 1.1em;
+    opacity: 0.8;
+    transition: opacity 0.4s ease;
+}
+
+.footer-text:hover {
+    opacity: 1;
 }
 
 /* Auth Cards Animation */
@@ -701,14 +723,6 @@ body {
     .auditions-grid {
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
-
-    .footer-content {
-        gap: 12px;
-    }
-
-    .footer-socials a {
-        font-size: 1.4em;
-    }
 }
 
 @media (max-width: 900px) {
@@ -754,14 +768,9 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .footer-content {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
     .footer-socials {
-        gap: 10px;
+        flex-direction: column;
+        gap: 20px;
     }
 }
 
@@ -773,7 +782,7 @@ body {
     .nav-links {
         display: none;
         position: absolute;
-        top: 70px;
+        top: 70px; /* Adjusted to account for header height */
         left: 0;
         right: 0;
         background: rgba(15, 23, 42, 0.95);
@@ -819,10 +828,6 @@ body {
     .form-input,
     .form-textarea {
         font-size: 1em;
-    }
-
-    .footer-socials a {
-        font-size: 1.3em;
     }
 }
 
@@ -905,20 +910,5 @@ body {
         margin-top: 20px;
         width: auto;
         display: inline-block;
-    }
-
-    .footer-content {
-        gap: 8px;
-        padding: 0 10px;
-    }
-
-    .footer-socials {
-        gap: 8px;
-        max-width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .footer-socials a {
-        font-size: 1.2em;
     }
 }
