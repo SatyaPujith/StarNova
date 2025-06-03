@@ -729,7 +729,7 @@ function Home() {
     return (
         <div className="app-container">
             <header className="header">
-                <Link to="/" className="logo">Auditions Platform</Link>
+                <Link to="/" className="logo">StarNova</Link>
                 <i className="fas fa-bars menu-icon" onClick={toggleMenu}></i>
                 <nav className={`nav-links ${menuOpen ? 'active' : ''}`}>
                     <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}><i className="fas fa-home"></i> Home</Link>
@@ -1295,7 +1295,7 @@ function Home() {
                         <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
                         <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin-in"></i></a>
                     </div>
-                    <p className="footer-text">© 2025 Auditions Platform. All rights reserved.</p>
+                    <p className="footer-text">© 2025 StarNova. All rights reserved.</p>
                 </div>
             </footer>
         </div>
