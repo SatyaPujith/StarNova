@@ -1,7 +1,7 @@
 ## StarNova - Audition & Competition Discovery Platform
 
 StarNova is an open-source platform that helps artists and performers discover auditions and competitions near them. Organizers can easily post events, and users can browse listings sorted by proximity, interest, or popularity.
-
+##### Live Link: https://star-nova-three.vercel.app/
 ##  Features
 
 - Dual Registration: Separate flows for Users and Organizers
