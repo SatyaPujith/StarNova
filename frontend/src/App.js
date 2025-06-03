@@ -120,7 +120,6 @@ function Profile() {
                         <div className="error-message">{error}</div>
                     ) : (
                         <>
- trabalha para o futuro
                             <div className="profile-details">
                                 <h2 className="section-title">Profile Details</h2>
                                 <p><strong>Username:</strong> {user.username}</p>
@@ -236,6 +235,7 @@ function Home() {
     const navigate = useNavigate();
     const [auditions, setAuditions] = useState([]);
     const [nearbyAuditions, setNearbyAuditions] = useState([]);
+    const [recommendedAuditions, setRecommendedAuditions] = useState([]);
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
     const [token, setToken] = useState(localStorage.getItem('token') || '');
     const [isSignInVisible, setIsSignInVisible] = useState(false);
@@ -276,6 +276,7 @@ function Home() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setNearbyAuditions([]);
+        setRecommendedAuditions([]);
         navigate('/');
     }, [navigate]);
 
@@ -328,12 +329,32 @@ function Home() {
             }
         };
 
+        const fetchRecommendations = async () => {
+            if (token && user && user.role === 'user') {
+                try {
+                    const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auditions/recommendations`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (isMounted) setRecommendedAuditions(res.data || []);
+                } catch (err) {
+                    if (isMounted) {
+                        console.error('Error fetching recommendations:', err);
+                        setError('Failed to load recommended auditions.');
+                        if (err.response?.status === 401) {
+                            handleLogout();
+                        }
+                    }
+                }
+            }
+        };
+
         fetchAuditions();
+        fetchRecommendations();
 
         return () => {
             isMounted = false;
         };
-    }, [token]);
+    }, [token, user, handleLogout]);
 
     useEffect(() => {
         let isMounted = true;
@@ -586,6 +607,7 @@ function Home() {
             .then((res) => {
                 setAuditions(auditions.map(a => a._id === auditionId ? res.data : a));
                 setNearbyAuditions(nearbyAuditions.map(a => a._id === auditionId ? res.data : a));
+                setRecommendedAuditions(recommendedAuditions.map(a => a._id === auditionId ? res.data : a));
                 setError(null);
             })
             .catch((err) => {
@@ -609,6 +631,7 @@ function Home() {
             .then((res) => {
                 setAuditions(auditions.map(a => a._id === auditionId ? res.data : a));
                 setNearbyAuditions(nearbyAuditions.map(a => a._id === auditionId ? res.data : a));
+                setRecommendedAuditions(recommendedAuditions.map(a => a._id === auditionId ? res.data : a));
                 setCommentText({ ...commentText, [auditionId]: '' });
                 setError(null);
             })
@@ -664,6 +687,7 @@ function Home() {
             .then((res) => {
                 setAuditions(auditions.map(a => a._id === auditionId ? res.data : a));
                 setNearbyAuditions(nearbyAuditions.map(a => a._id === auditionId ? res.data : a));
+                setRecommendedAuditions(recommendedAuditions.map(a => a._id === auditionId ? res.data : a));
                 setTalentSubmission({ ...talentSubmission, [auditionId]: { text: '', videoUrl: '' } });
                 setError(null);
                 alert('Talent submitted successfully!');
@@ -971,6 +995,58 @@ function Home() {
                 )}
 
                 <div className="auditions-container">
+                    {user && user.role === 'user' && (
+                        <>
+                            <h2 className="section-title">Recommended Auditions</h2>
+                            {loading ? (
+                                <div className="loading-spinner">Loading...</div>
+                            ) : error ? (
+                                <div className="error-message">{error}</div>
+                            ) : recommendedAuditions.length === 0 ? (
+                                <p className="no-data-message">
+                                    Submit some talent to get personalized recommendations!
+                                </p>
+                            ) : (
+                                <div className="auditions-grid">
+                                    {recommendedAuditions.map((audition) => (
+                                        <div key={audition._id} className="audition-card" onClick={() => openAuditionDetails(audition)}>
+                                            <h3 className="audition-title">{audition.title}</h3>
+                                            <p className="audition-description">{audition.description.substring(0, 100) + '...'}</p>
+                                            <p className="audition-date">Date: {audition.date}</p>
+                                            <p className="audition-location">
+                                                Location: {audition.location?.name || 'Not specified'}
+                                                {userLocation && audition.location?.coordinates?.latitude && audition.location?.coordinates?.longitude && (
+                                                    <span>
+                                                        {' '}
+                                                        ({Math.round(calculateDistance(
+                                                            userLocation.latitude,
+                                                            userLocation.longitude,
+                                                            audition.location.coordinates.latitude,
+                                                            audition.location.coordinates.longitude
+                                                        ))} km away)
+                                                    </span>
+                                                )}
+                                            </p>
+                                            <div className="interaction-container">
+                                                <button onClick={(e) => { e.stopPropagation(); handleLike(audition._id); }} className="interaction-button">
+                                                    <i className={audition.likes.includes(user?.id) ? 'fas fa-heart' : 'far fa-heart'}></i>
+                                                    {audition.likes.length}
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleShare(audition._id); }} className="interaction-button">
+                                                    <i className="fas fa-share"></i> Share
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleBookmark(audition._id); }} className="interaction-button">
+                                                    <i className={user?.bookmarks?.includes(audition._id) ? 'fas fa-bookmark' : 'far fa-bookmark'}></i>
+                                                    {user?.bookmarks?.includes(audition._id) ? 'Unbookmark' : 'Bookmark'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+
                     <h2 className="section-title">Nearby Auditions</h2>
                     {loading ? (
                         <div className="loading-spinner">Loading...</div>
@@ -1070,7 +1146,7 @@ function Home() {
                         <p className="audition-date">Date: {selectedAudition.date}</p>
                         <p className="audition-location">
                             Location: {selectedAudition.location?.name || 'Not specified'}
-                            {userLocation && selected;<Audition.location?.coordinates?.latitude && selectedAudition.location?.coordinates?.longitude && (
+                            {userLocation && selectedAudition.location?.coordinates?.latitude && selectedAudition.location?.coordinates?.longitude && (
                                 <span>
                                     {' '}
                                     ({Math.round(calculateDistance(
